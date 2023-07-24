@@ -1,15 +1,16 @@
-using UnityEngine;
+ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    [SerializeField] private float speed; //speed float + editable in Unity editor due to SerializeField
-    [SerializeField] private float jumpheight; // jump height float + editable in Unity editor
-    [SerializeField] private int jumpcount; // amount of jumps a player can do before needing to touch the ground
-    private int originaljumpcount;
-    private bool grounded;
+    [SerializeField] private float speed; // Speed float + editable in Unity editor due to SerializeField
+    [SerializeField] private float jumpheight; // Jump height float + editable in Unity editor
+    [SerializeField] private int jumpcount; // Amount of jumps a player can do before needing to touch the ground
+    private bool FacingRight = true;
+    private bool grounded = true;
+    private float horizontal;
     private Rigidbody2D body;
 
-    private void Awake()
+    private void Awake() 
     {
         body = GetComponent<Rigidbody2D>();
     }
@@ -18,30 +19,29 @@ public class PlayerMovement : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        originaljumpcount = jumpcount;
     }
 
     // Update is called once per frame
-    private void Update()
+    void Update()
     {
-        body.velocity = new Vector2(Input.GetAxis("Horizontal") * speed, body.velocity.y); //Horizontal player movement, the velocity gets influenced by the input axis (value between -1 and 1)
-        if (Input.GetKey(KeyCode.Space)) // check for player input (can be improved by not checking on every frame)
-            if (jumpcount > 0) //check jump count, if above 0 the player jumps
-                if (grounded)
-                   {
-                     body.velocity = new Vector2(body.velocity.x, jumpheight); // Jump implementation
-                     grounded = false;
-                     jumpcount = jumpcount - 1; // Decreases the jump by 1 (currently bugged due to the pressed/not pressed on update) 
-                   }
+        horizontal = Input.GetAxisRaw("Horizontal"); // Gets a value which is either -1, 0 or 1. can be used to determine the characters movement and which way it should face
+
+        FlipCharacter(); // Check if the character needs to be flipped
     }
-    private void OnCollisionEnter2D(Collision2D collision) // Check player collision with ground
+
+    private void FixedUpdate()
+    {
+        body.velocity = new Vector2(Input.GetAxisRaw("Horizontal") * speed, body.velocity.y); // Horizontal player movement, the velocity gets influenced by the input axis (value between -1 and 1)
+    }
+
+    private void FlipCharacter() // Event to flip the player when it's moving opposing to the way it's facing
+    {
+        if (FacingRight && horizontal < 0f || !FacingRight && horizontal > 0f) 
         {
-        if (collision.gameObject.tag == "Main Stage") // Checks if the player is colliding with the main stage
-            grounded = true;
-            jumpcount = originaljumpcount;
+            FacingRight = !FacingRight;
+            Vector3 localScale = transform.localScale;
+            localScale.x *= -1f; // Turns the player around
+            transform.localScale = localScale;
         }
+    }
 }
-
-
-
-// use keydown events and make booleans to check if the key is pressed or not, use them to determine whether the character can jump again
