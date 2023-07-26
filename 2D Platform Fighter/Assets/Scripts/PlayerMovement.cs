@@ -1,16 +1,26 @@
- using UnityEngine;
+using System.Collections;
+using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] public float speed; // Speed float + editable in Unity editor due to SerializeField
+    private float MoveHorizontal;
 
     [SerializeField] public float jump;
     [SerializeField] public int jumpcount; // Amount of jumps a player can do before needing to touch the ground
 
-    public bool FacingRight = true;
+    private bool canDash = true; // Checks if the player is allowed to dash
+    [SerializeField] public float DashVelocity; //How fast the player dashes
+    [SerializeField] public float DashTime; //How long the dash lasts
+    [SerializeField] public float DashCooldown; // How long the player waits until the player can dash again
+
+    private bool FacingRight = true;
 
     private bool Grounded;
-    private float MoveHorizontal;
+    private bool Dashing;
+
+
+
 
     public Rigidbody2D Rigidbody; // Rigidbody2D is now referenced to as rb
 
@@ -27,17 +37,25 @@ public class PlayerMovement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
         MoveHorizontal = Input.GetAxis("Horizontal"); // Gets a value which is either -1, 0 or 1. can be used to determine the characters movement and which way the character should face
 
         FlipCharacter(); // Check if the character needs to be flipped
 
         Rigidbody.velocity = new Vector2(MoveHorizontal * speed, Rigidbody.velocity.y); // Horizontal player movement, the velocity gets influenced by the input axis (value between -1 and 1)
 
-        if (Input.GetButtonDown("Jump") && jumpcount >0)
-        { 
-            Rigidbody.velocity = new Vector2(Rigidbody.velocity.x, 0); // Sets y velocity to 0 before jumping to make jumpheight consistent
+        if (Input.GetButtonDown("Jump") && jumpcount > 0)
+        {
+            EndDashIfDashing();
+            Rigidbody.velocity = new Vector2(Rigidbody.velocity.x, 0); // Sets y velocity to 0 before jumping to make jump height consistent
             Rigidbody.AddForce(new Vector2(Rigidbody.velocity.x, jump));
-            jumpcount --;
+            jumpcount--;
+        }
+
+
+        if (Input.GetKeyDown(KeyCode.LeftShift) && canDash && Grounded) // if player is grounded, can dash and pressed left shift the dash enumeration starts
+        {
+            StartCoroutine(Dash());
         }
     }
 
@@ -75,4 +93,38 @@ public class PlayerMovement : MonoBehaviour
             Grounded = false;
         }
     }
-} 
+
+    private IEnumerator Dash()
+    {
+        if (canDash)
+        {
+            canDash = false;
+            Dashing = true;
+            Rigidbody.velocity = Vector2.zero;
+            Rigidbody.AddForce(new Vector2(transform.localScale.x * DashVelocity, 0f), ForceMode2D.Impulse);
+
+            yield return new WaitForSeconds(DashTime);
+
+            // Check if the player is still dashing (hasn't jumped) before ending the dash.
+            if (Dashing)
+            {
+                Rigidbody.velocity = Vector2.zero;
+                Dashing = false;
+                yield return new WaitForSeconds(DashCooldown);
+                canDash = true;
+            }
+        }
+    }
+
+    // Call this function to end the dash prematurely.
+    private void EndDashIfDashing()
+    {
+        if (Dashing)
+        {
+            StopCoroutine(Dash());
+            Rigidbody.velocity = Vector2.zero;
+            Dashing = false;
+            canDash = true;
+        }
+    }
+}
