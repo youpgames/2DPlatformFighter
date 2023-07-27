@@ -9,6 +9,9 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] public float jump;
     [SerializeField] public int jumpcount; // Amount of jumps a player can do before needing to touch the ground
 
+    [SerializeField] public float WalljumpHorizontalVelocity;
+    [SerializeField] public float WalljumpVerticalVelocity;
+
     private bool canDash = true; // Checks if the player is allowed to dash
     [SerializeField] public float DashVelocity; //How fast the player dashes
     [SerializeField] public float DashTime; //How long the dash lasts
@@ -17,6 +20,7 @@ public class PlayerMovement : MonoBehaviour
     private bool FacingRight = true;
 
     private bool Grounded;
+    private bool onWall;
     private bool Dashing;
 
 
@@ -24,7 +28,7 @@ public class PlayerMovement : MonoBehaviour
 
     public Rigidbody2D Rigidbody; // Rigidbody2D is now referenced to as rb
 
-    private void Awake() 
+    private void Awake()
     {
         Application.targetFrameRate = 60; // Put in the game start-up script once it gets created
     }
@@ -46,10 +50,26 @@ public class PlayerMovement : MonoBehaviour
 
         if (Input.GetButtonDown("Jump") && jumpcount > 0)
         {
-            EndDashIfDashing();
-            Rigidbody.velocity = new Vector2(Rigidbody.velocity.x, 0); // Sets y velocity to 0 before jumping to make jump height consistent
-            Rigidbody.AddForce(new Vector2(Rigidbody.velocity.x, jump));
-            jumpcount--;
+            if (Grounded)
+            {
+                EndDashIfDashing();
+                Rigidbody.velocity = new Vector2(Rigidbody.velocity.x, 0); // Sets y velocity to 0 before jumping to make jump height consistent
+                Rigidbody.AddForce(new Vector2(Rigidbody.velocity.x, jump));
+                jumpcount--;
+            }
+            else if (onWall)
+            {
+                Rigidbody.velocity = new Vector2(0, 0);
+                Rigidbody.AddForce(new Vector2(-MoveHorizontal * WalljumpHorizontalVelocity, WalljumpVerticalVelocity)); // Change this for a raycast collision that tells the script on what side the wall is, add a slight input delay when jumping off the wall
+                jumpcount--;
+            }
+            else
+            {
+                Rigidbody.velocity = new Vector2(Rigidbody.velocity.x, 0); // Sets y velocity to 0 before jumping to make jump height consistent
+                Rigidbody.AddForce(new Vector2(Rigidbody.velocity.x, jump));
+                jumpcount--;
+            }
+
         }
 
 
@@ -65,7 +85,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void FlipCharacter() // Event to flip the player when it's moving opposing to the way it's facing 
     {
-        if (FacingRight && MoveHorizontal < 0f || !FacingRight && MoveHorizontal > 0f) 
+        if (FacingRight && MoveHorizontal < 0f || !FacingRight && MoveHorizontal > 0f)
         {
             FacingRight = !FacingRight;
             Vector3 localScale = transform.localScale;
@@ -84,6 +104,11 @@ public class PlayerMovement : MonoBehaviour
             Grounded = true;
             jumpcount = 3;
         }
+        else if (other.gameObject.CompareTag("Wall"))
+        {
+            onWall=true;
+            jumpcount = 2;
+        }
     }
 
     private void OnCollisionExit2D(Collision2D other) // Sets grounded false when stops colliding
@@ -91,6 +116,10 @@ public class PlayerMovement : MonoBehaviour
         if (other.gameObject.CompareTag("Floor"))
         {
             Grounded = false;
+        }
+        else if (other.gameObject.CompareTag("Wall"))
+        {
+            onWall = false;
         }
     }
 
