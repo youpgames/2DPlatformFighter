@@ -1,9 +1,11 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
 {
-    [SerializeField] public float speed; // Speed float + editable in Unity editor due to SerializeField
+    [SerializeField] 
+    private float speed; // Speed float + editable in Unity editor due to SerializeField
     private float MoveHorizontal;
 
     [SerializeField] public float jump;
@@ -22,15 +24,13 @@ public class PlayerMovement : MonoBehaviour
     private bool Grounded;
     private bool onWall;
     private bool Dashing;
-
-
-
+    
 
     public Rigidbody2D Rigidbody; // Rigidbody2D is now referenced to as rb
 
     private void Awake()
     {
-        Application.targetFrameRate = 60; // Put in the game start-up script once it gets created
+        
     }
 
     // Start is called before the first frame update
@@ -77,10 +77,6 @@ public class PlayerMovement : MonoBehaviour
         {
             StartCoroutine(Dash());
         }
-    }
-
-    private void FixedUpdate()
-    {
     }
 
     private void FlipCharacter() // Event to flip the player when it's moving opposing to the way it's facing 
@@ -144,7 +140,7 @@ public class PlayerMovement : MonoBehaviour
             }
         }
     }
-
+    
     // Call this function to end the dash prematurely.
     private void EndDashIfDashing()
     {
