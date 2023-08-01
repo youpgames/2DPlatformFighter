@@ -61,6 +61,24 @@ sysinfo.txt
 *.unitypackage
 *.app
 
+# Ignore Visual Studio Code (VSCode) settings
+.vscode/
+
+# Ignore Visual Studio settings
+*.csproj
+*.sln
+*.suo
+*.user
+*.userprefs
+
+# Ignore Rider settings
+.idea/
+*.sln.iml
+*.csproj
+*.csproj.DotSettings
+*.sln.DotSettings
+
+
 # Crashlytics generated file
 crashlytics-build.properties
 
